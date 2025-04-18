@@ -27,3 +27,5 @@ tqdm==4.67.1
 typing-inspection==0.4.0
 typing_extensions==4.13.2
 urllib3==2.4.0
+scipy
+jinja2
