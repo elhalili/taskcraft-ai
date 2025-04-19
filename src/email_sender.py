@@ -50,11 +50,7 @@ def generate_email_from_prompt(prompt: str) -> Optional[dict]:
         print(f"❌ Error generating email: {e}")
         return None
 
-
 def send_email(contact: str, subject: str, body: str):
-    """
-    Sends an email to the specified contact with subject and body.
-    """
     if not SENDER_EMAIL or not SENDER_APP_PASSWORD:
         print("❌ Missing GMAIL_USER or GMAIL_APP_PASSWORD in environment.")
         sys.exit(1)
@@ -85,3 +81,5 @@ def send_email(contact: str, subject: str, body: str):
             print(f"✅ Email sent to {contact}")
     except Exception as e:
         print(f"❌ Failed to send email to {contact}: {e}")
+
+        

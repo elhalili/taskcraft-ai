@@ -35,7 +35,7 @@ class VoiceRecorderApp(QMainWindow):
         self.current_mode = "command"  # Default mode
 
         # Initialize whisper model
-        self.model = Model("base", n_threads=8, print_realtime=False)
+        self.model = Model("base",language="en", n_threads=8, print_realtime=False)
 
         self.init_ui()
         self.check_audio_input()
