@@ -3,3 +3,7 @@ NEBIUS_BASE_URL="https://api.studio.nebius.com/v1/"
 MODEL="meta-llama/Meta-Llama-3.1-70B-Instruct"
 GMAIL_APP_PASSWORD=""
 GMAIL_USER=""
+JIRA_API_KEY=
+JIRA_BASE_URL=https://username.atlassian.net/rest/api/3 
+EMAIL=  # jira email
+USER_ID= # user id in jira
