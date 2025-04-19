@@ -11,7 +11,7 @@ load_dotenv()
 
 SENDER_EMAIL = os.getenv("GMAIL_USER")
 SENDER_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-CONTACTS_FILE = "src/contacts.json"  # path to your contact list
+CONTACTS_FILE = "./contacts.json" 
 
 
 def load_contacts():

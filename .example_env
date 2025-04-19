@@ -1,5 +1,5 @@
 NEBIUS_API_KEY="yourkey"
-NEBIUS_BASE_UR="https://api.studio.nebius.com/v1/"
+NEBIUS_BASE_URL="https://api.studio.nebius.com/v1/"
 MODEL="meta-llama/Meta-Llama-3.1-70B-Instruct"
 GMAIL_APP_PASSWORD=""
 GMAIL_USER=""
