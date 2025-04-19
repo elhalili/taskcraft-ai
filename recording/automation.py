@@ -23,8 +23,8 @@ The user is running on the Windows operating system ({platform.system()} {platfo
 Ensure the command is syntactically correct for cmd.exe.
 
 Example 1:
-Instruction: send an email to ahmed
-Output: python C:\Users\mucef\Desktop\hackthun\Emails\sendEMAIL.py --email contact@mouncef.tech --subject "reminder for meeting tomorrow at 10PM"
+Instruction: send an email to Mouncef
+Output: python ..\services\Emails\sendEMAIL.py --email contact@mouncef.tech --subject "reminder for meeting tomorrow at 10PM"
 
 Example 2:
 Instruction: create a new folder named 'my_project' on the Desktop

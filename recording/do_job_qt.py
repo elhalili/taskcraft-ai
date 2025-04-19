@@ -19,7 +19,7 @@ from PyQt6.QtGui import QFont, QPalette, QColor
 
 from automation import execute_cmd, get_cmd 
 
-WHISPER_CPP_PATH = r"C:\Users\mucef\Desktop\hackthun\whisper.cpp"
+WHISPER_CPP_PATH = r"C:\Users\mucef\Desktop\opportunAI\whisper.cpp"
 WHISPER_CPP_EXECUTABLE = os.path.join(WHISPER_CPP_PATH, "build", "bin", "Release", "whisper-cli.exe")
 WHISPER_MODEL_PATH = os.path.join(WHISPER_CPP_PATH, "models", "ggml-base.bin")
 

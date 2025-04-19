@@ -29,3 +29,9 @@ typing_extensions==4.13.2
 urllib3==2.4.0
 scipy
 jinja2
+google-api-python-client
+google-auth-httplib2 
+google-auth-oauthlib 
+python-dateutil 
+pytz
+tzlocal
