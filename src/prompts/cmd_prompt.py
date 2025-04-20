@@ -1,9 +1,6 @@
 import platform
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY")
 NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL")

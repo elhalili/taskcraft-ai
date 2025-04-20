@@ -3,42 +3,20 @@ import smtplib
 import sys
 import json
 from email.message import EmailMessage
-from dotenv import load_dotenv
 from prompts.email_prompt import get_email_prompt
 from typing import Optional
 
-load_dotenv()
-
 SENDER_EMAIL = os.getenv("GMAIL_USER")
 SENDER_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-CONTACTS_FILE = "./contacts.json" 
 
 
-def load_contacts():
-    """
-    Loads contact list from JSON file.
-    Expected format:
-    {
-        "John Doe": "john.doe@example.com",
-        "Sarah Smith": "sarah.smith@example.com"
-    }
-    Returns a dictionary of name -> email.
-    """
-    if not os.path.exists(CONTACTS_FILE):
-        raise FileNotFoundError(f"Contact list file '{CONTACTS_FILE}' not found.")
-
-    with open(CONTACTS_FILE, "r") as f:
-        return json.load(f)
-
-
-def generate_email_from_prompt(prompt: str) -> Optional[dict]:
+def generate_email_from_prompt(prompt: str, contacts) -> Optional[dict]:
     """
     Uses LLM to generate an email for a single contact.
     Loads contact list from file.
     Returns: {"contact": ..., "subject": ..., "body": ...}
     """
     try:
-        contacts = load_contacts()
         response, error = get_email_prompt(prompt, contacts)
         print(response)
         if not error:

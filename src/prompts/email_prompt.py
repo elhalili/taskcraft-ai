@@ -1,10 +1,7 @@
 import json
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
 from typing import List, Dict, Tuple, Optional
-
-load_dotenv()
 
 NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY")
 NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL")

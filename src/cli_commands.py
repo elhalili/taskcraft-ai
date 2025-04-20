@@ -1,9 +1,7 @@
 import platform
 import subprocess
-from dotenv import load_dotenv
 from prompts import get_cmd_prompt  # uses the correct prompt for OS
 
-load_dotenv()
 
 def get_cmd(instruction):
     command, error = get_cmd_prompt(instruction)
