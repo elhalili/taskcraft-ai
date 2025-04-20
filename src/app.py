@@ -27,13 +27,6 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Application Settings")
         self.setModal(True)
         self.settings = QSettings("VoiceCommandApp", "VoiceRecorder")
-
-        self.contacts_group = QGroupBox("Contacts Management")
-        
-        self.contacts_path_label = QLabel("No contacts file loaded")
-        self.load_contacts_button = QPushButton("Load Contacts File")
-        self.load_contacts_button.clicked.connect(self.load_contacts_file)
-        
         
         self.init_ui()
         self.load_settings()
@@ -91,14 +84,37 @@ class SettingsDialog(QDialog):
         whisper_settings_layout.addRow("Model Name:", self.whisper_model_input)
         whisper_settings_layout.addRow("Language:", self.whisper_lang_input)
         whisper_settings_layout.addRow("Thread Count:", self.whisper_threads_input)
+        
+        scroll_layout.addRow(self.whisper_settings_group)
+
+        self.contacts_group = QGroupBox("Contacts Management")
+        self.contacts_path_label = QLabel("No contacts file loaded")
+        self.load_contacts_button = QPushButton("Load Contacts File")
+        self.load_contacts_button.clicked.connect(self.load_contacts_file)
 
         contacts_layout = QVBoxLayout(self.contacts_group)
         contacts_layout.addWidget(self.contacts_path_label)
         contacts_layout.addWidget(self.load_contacts_button)
+
         scroll_layout.addRow(self.contacts_group)
 
+        self.jira_settings_group = QGroupBox("Jira Settings")
+        jira_settings_layout = QFormLayout(self.jira_settings_group)
         
-        scroll_layout.addRow(self.whisper_settings_group)
+        self.jira_email_input = QLineEdit()
+        self.jira_token_input = QLineEdit()
+        self.jira_userid_input = QLineEdit()
+        self.jira_base_url_input = QLineEdit()
+
+        
+        jira_settings_layout.addRow("Jira Email:", self.jira_email_input)
+        jira_settings_layout.addRow("Jira token:", self.jira_token_input)
+        jira_settings_layout.addRow("Jira userID:", self.jira_userid_input)
+        jira_settings_layout.addRow("Jira base URL:", self.jira_base_url_input)
+
+
+        
+        scroll_layout.addRow(self.jira_settings_group)
         
         scroll.setWidget(scroll_content)
         general_layout.addWidget(scroll)
@@ -146,6 +162,10 @@ class SettingsDialog(QDialog):
         self.sender_email_input.setText(self.settings.value("email/sender", ""))
         self.sender_password_input.setText(self.settings.value("email/password", ""))
         self.default_recipient_input.setText(self.settings.value("email/default_recipient", ""))
+        self.jira_email_input.setText(self.settings.value("jira/email", ""))
+        self.jira_token_input.setText(self.settings.value("jira/token", ""))
+        self.jira_userid_input.setText(self.settings.value("jira/userid", ""))
+        self.jira_base_url_input.setText(self.settings.value("jira/base_url", ""))
         self.whisper_model_input.setText(self.settings.value("whisper/model", "base"))
         self.whisper_lang_input.setText(self.settings.value("whisper/lang", "en"))
         self.whisper_threads_input.setText(self.settings.value("whisper/threads", "4"))
@@ -159,6 +179,11 @@ class SettingsDialog(QDialog):
         self.settings.setValue("nebius/model", self.nebius_model_input.text())
         self.settings.setValue("email/sender", self.sender_email_input.text())
         self.settings.setValue("email/password", self.sender_password_input.text())
+        self.settings.setValue("jira/email", self.jira_email_input.text())
+        self.settings.setValue("jira/token", self.jira_token_input.text())
+        self.settings.setValue("jira/userid", self.jira_userid_input.text())
+        self.settings.setValue("jira/base_url", self.jira_base_url_input.text())
+
         self.settings.setValue("email/default_recipient", self.default_recipient_input.text())
         self.settings.setValue("whisper/model", self.whisper_model_input.text())
         self.settings.setValue("whisper/lang", self.whisper_lang_input.text())
@@ -184,6 +209,12 @@ class SettingsDialog(QDialog):
                 "model": self.settings.value("whisper/model", "base"),
                 "lang": self.settings.value("whisper/lang", "en"),
                 "threads": int(self.settings.value("whisper/threads", 4))
+            },
+            "jira": {
+                "email": self.settings.value("jira/email", ""),
+                "token": self.settings.value("jira/token", ""),
+                "userid": self.settings.value("jira/userid", ""),
+                "base_url": self.settings.value("jira/base_url", "")
             }
         }
 
@@ -322,6 +353,39 @@ class VoiceRecorderApp(QMainWindow):
         main_layout.addWidget(self.email_group)
         self.email_group.hide()
 
+        # Add Jira mode radio button
+        self.jira_radio = QRadioButton("Jira Mode")
+        self.jira_radio.toggled.connect(lambda: self.set_mode("jira"))
+        
+        # Add Jira GroupBox
+        self.jira_group = QGroupBox("Jira Operation")
+        jira_layout = QVBoxLayout(self.jira_group)
+        self.jira_label = QLabel("...")
+        self.jira_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.jira_label.setFont(QFont("Consolas", 10))
+        self.jira_label.setWordWrap(True)
+        jira_layout.addWidget(self.jira_label)
+        
+        jira_button_layout = QHBoxLayout()
+        self.execute_jira_button = QPushButton("Execute Jira Operation")
+        self.execute_jira_button.clicked.connect(self.execute_jira_command)
+        self.execute_jira_button.setEnabled(False)
+        jira_button_layout.addWidget(self.execute_jira_button)
+        
+        self.cancel_jira_button = QPushButton("Clear/Cancel")
+        self.cancel_jira_button.clicked.connect(self.clear_command)
+        self.cancel_jira_button.setEnabled(False)
+        jira_button_layout.addWidget(self.cancel_jira_button)
+        
+        jira_layout.addLayout(jira_button_layout)
+        self.jira_group.hide()
+        
+        # Add Jira radio button to mode selection
+        mode_layout.addWidget(self.jira_radio)
+        
+        # Add Jira group to main layout
+        main_layout.addWidget(self.jira_group)
+
     def load_contacts(self):
         """Load contacts from the configured JSON file"""
         contacts_path = self.app_settings["contacts"]["path"]
@@ -369,9 +433,14 @@ class VoiceRecorderApp(QMainWindow):
             if self.current_mode == "command":
                 self.execute_button.setEnabled(True)
                 self.cancel_button.setEnabled(True)
-            else:
+                self.execute_jira_button.setEnabled(False)
+            elif self.current_mode == "email":
                 self.send_email_button.setEnabled(True)
                 self.cancel_email_button.setEnabled(True)
+                self.execute_jira_button.setEnabled(False)
+            else:  # jira mode
+                self.execute_jira_button.setEnabled(True)
+                self.cancel_jira_button.setEnabled(True)
             self.update_status("Review suggested command and Execute or Clear.")
 
     def check_audio_input(self):
@@ -389,6 +458,12 @@ class VoiceRecorderApp(QMainWindow):
         os.environ["MODEL"] = self.app_settings["nebius"]["model"]
         os.environ["GMAIL_USER"] = self.app_settings["email"]["sender"]
         os.environ["GMAIL_APP_PASSWORD"] = self.app_settings["email"]["password"]
+        os.environ["JIRA_EMAIL"] = self.app_settings["jira"]["email"]
+        os.environ["JIRA_API_KEY"] = self.app_settings["jira"]["token"]
+        os.environ["JIRA_USER_ID"] = self.app_settings["jira"]["userid"]
+        os.environ["JIRA_BASE_URL"] = self.app_settings["jira"]["base_url"]
+
+
 
     def open_settings(self):
         if self.settings_dialog.exec() == QDialog.DialogCode.Accepted:
@@ -402,15 +477,25 @@ class VoiceRecorderApp(QMainWindow):
             )
             self.update_status("Settings updated successfully")
 
+
     def set_mode(self, mode):
         self.current_mode = mode
         if mode == "command":
             self.command_group.show()
             self.email_group.hide()
-        else:
+            self.jira_group.hide()
+        elif mode == "email":
             self.command_group.hide()
             self.email_group.show()
+            self.jira_group.hide()
+        else:  # jira mode
+            self.command_group.hide()
+            self.email_group.hide()
+            self.jira_group.show()
         self.clear_command()
+
+    def update_jira_display(self, text):
+        self.jira_label.setText(text if text else "...")
 
     def update_status(self, message, is_error=False):
         self.status_label.setText(f"Status: {message}")
@@ -520,19 +605,29 @@ class VoiceRecorderApp(QMainWindow):
                     self.result_queue.put(("gpt_success", command))
                 else:
                     self.result_queue.put(("gpt_error", "Failed to generate command (Unknown reason)."))
-            else:
+            elif self.current_mode == "email":
                 email_data = generate_email_from_prompt(instruction, self.contacts)
                 if email_data:
                     self.result_queue.put(("email_success", email_data))
                 else:
                     self.result_queue.put(("email_error", "Failed to generate email content."))
+            else:  # jira mode
+                jira_data, error = get_jira_prompt(instruction)
+                if error:
+                    self.result_queue.put(("jira_error", error))
+                elif jira_data:
+                    self.result_queue.put(("jira_success", jira_data))
+                else:
+                    self.result_queue.put(("jira_error", "Failed to generate Jira operation"))
         except Exception as e:
             error_message = f"An unexpected error occurred during command generation: {e}"
             print(error_message, flush=True)
             if self.current_mode == "command":
                 self.result_queue.put(("gpt_error", error_message))
-            else:
+            elif self.current_mode == "email":
                 self.result_queue.put(("email_error", error_message))
+            else:
+                self.result_queue.put(("jira_error", error_message))
 
     def check_queue(self):
         try:
@@ -579,11 +674,82 @@ class VoiceRecorderApp(QMainWindow):
                 QMessageBox.critical(self, "Email Generation Error", data)
                 self.set_ui_state('idle')
 
+            elif message_type == "jira_success":
+                self.suggested_command = data
+                operation = data["operation"]
+                display_text = f"Operation: {operation}\n"
+                
+                if operation == "create_issue":
+                    params = data["params"]
+                    display_text += f"Issue: {params['issue_name']}\n"
+                    display_text += f"Project: {params['project_key']}\n"
+                    display_text += f"Type: {params['task_type']}\n"
+                    display_text += f"Description: {params['description']}"
+                elif operation == "create_project":
+                    params = data["params"]
+                    display_text += f"Project: {params['project_name']}\n"
+                    display_text += f"Description: {params['description']}"
+                elif operation == "list_project":
+                    display_text += "Will list all available projects"
+                
+                self.update_jira_display(display_text)
+                self.set_ui_state('awaiting_confirmation')
+                
+            elif message_type == "jira_error":
+                self.update_jira_display(f"Error generating Jira operation.")
+                self.update_status(f"Jira operation generation failed", is_error=True)
+                QMessageBox.critical(self, "Jira Generation Error", data)
+                self.set_ui_state('idle')
+
         except queue.Empty:
             pass
         except Exception as e:
             print(f"Error processing queue: {e}", flush=True)
             self.update_status(f"Internal GUI error: {e}", is_error=True)
+
+    def execute_jira_command(self):
+        if not self.suggested_command or not isinstance(self.suggested_command, dict):
+            return
+
+        operation = self.suggested_command["operation"]
+        result = None
+        
+        try:
+            if operation == "list_project":
+                result = list_project()
+            elif operation == "create_project":
+                params = self.suggested_command["params"]
+                result = create_project(
+                    project_name=params["project_name"],
+                    description=params["description"]
+                )
+            elif operation == "create_issue":
+                params = self.suggested_command["params"]
+                result = create_issue(
+                    issue_name=params["issue_name"],
+                    description=params["description"],
+                    project_key=params["project_key"],
+                    task_type=params["task_type"]
+                )
+            else:
+                raise ValueError(f"Unknown Jira operation: {operation}")
+            
+            # Generate success message
+            success_msg, error = generate_success_message(result)
+            print(success_msg)
+            
+            if error:
+                raise Exception(error)
+                
+            self.update_status(success_msg)
+            self.update_jira_display(success_msg)
+            QTimer.singleShot(2000, lambda: self.set_ui_state('idle'))
+            
+        except Exception as e:
+            error_msg = f"Failed to execute Jira operation: {str(e)}"
+            self.update_status(error_msg, is_error=True)
+            QMessageBox.critical(self, "Jira Error", error_msg)
+            self.set_ui_state('awaiting_confirmation')
 
     def execute_suggested_command(self):
         if not self.suggested_command:
@@ -658,7 +824,9 @@ class VoiceRecorderApp(QMainWindow):
         self.suggested_command = ""
         self.update_command_display("")
         self.update_email_display("")
+        self.update_jira_display("")
         self.set_ui_state('idle')
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -666,6 +834,8 @@ if __name__ == "__main__":
     # make sure env var are loaded
     from cli_commands import execute_cmd, get_cmd 
     from email_sender import generate_email_from_prompt, send_email
+    from jira_automation import create_issue, create_project, list_project
+    from prompts import get_jira_prompt, generate_success_message
 
     main_window.show()
     sys.exit(app.exec())
