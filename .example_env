@@ -7,3 +7,4 @@ JIRA_API_KEY=
 JIRA_BASE_URL=https://username.atlassian.net/rest/api/3 
 EMAIL=  # jira email
 USER_ID= # user id in jira
+JIRA_SERVER=https://username.atlassian.net/
