@@ -2,12 +2,10 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 import os
-from jira import JIRA
 
 JIRA_API_TOKEN = os.getenv("JIRA_API_KEY")
 JIRA_EMAIL = os.getenv("JIRA_EMAIL")
 auth = HTTPBasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
-JIRA_SERVER = os.getenv('JIRA_SERVER')
 ACCOUNT_ID = os.getenv('JIRA_USER_ID')
 BASE_URL = os.getenv('JIRA_BASE_URL')
 
@@ -111,25 +109,3 @@ def list_project():
     return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
 
 
-# function to list last issues exist based on how much days
-def list_issues(day: int):
-    jira = JIRA(server=JIRA_SERVER, basic_auth=(JIRA_EMAIL, JIRA_API_TOKEN))
-    jql_query = f'created >= "-{day}d" ORDER BY created DESC'
-    issues = jira.search_issues(jql_str=jql_query)
-    
-    print(f"Found {len(issues)} issues with deadlines:")
-    for issue in issues:
-        issue_key = issue.key
-        summary = issue.fields.summary
-        due_date = issue.fields.duedate  
-        status = issue.fields.status.name  
-        assignee = issue.fields.assignee.displayName if issue.fields.assignee else "Unassigned"
-        
-        print(f"Issue Key: {issue_key}")
-        print(f"Summary: {summary}")
-        print(f"Due Date: {due_date}")
-        print(f"Status: {status}")
-        print(f"Assignee: {assignee}")
-        print("-"*40)
-
-list_issues(2)

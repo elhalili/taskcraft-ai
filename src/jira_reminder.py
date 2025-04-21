@@ -18,13 +18,13 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
-required_vars = ['JIRA_SERVER', 'EMAIL', 'JIRA_API_KEY', 'GMAIL_USER', 'GMAIL_APP_PASSWORD']
+required_vars = ['JIRA_SERVER', 'JIRA_EMAIL', 'JIRA_API_KEY', 'GMAIL_USER', 'GMAIL_APP_PASSWORD']
 missing = [var for var in required_vars if not os.getenv(var)]
 if missing:
     sys.exit(f"❌ Missing required environment variables: {', '.join(missing)}")
 
 JIRA_SERVER = os.getenv('JIRA_SERVER')
-EMAIL = os.getenv('EMAIL')
+EMAIL = os.getenv('JIRA_EMAIL')
 API_TOKEN = os.getenv('JIRA_API_KEY')
 
 SMTP_SERVER = 'smtp.gmail.com'
@@ -40,12 +40,15 @@ except Exception as e:
     sys.exit(f"❌ An unexpected error occurred: {e}")
 
 jql_query = 'duedate >= startOfDay() AND duedate <= startOfDay(2d) AND assignee IS NOT EMPTY'
-try:
-    issues = jira.search_issues(jql_str=jql_query, maxResults=50)
-except JIRAError as je:
-    sys.exit(f"❌ JIRA search failed: {je.text}")
-except Exception as e:
-    sys.exit(f"❌ An unexpected error occurred: {e}")
+
+issues = []
+start_at = 0
+while True:
+    batch = jira.search_issues(jql_str=jql_query, startAt=start_at, maxResults=50)
+    if not batch:
+        break
+    issues.extend(batch)
+    start_at += len(batch)
 
 def is_valid_email(email):
     regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'

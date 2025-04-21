@@ -11,11 +11,6 @@ SENDER_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 
 
 def generate_email_from_prompt(prompt: str, contacts) -> Optional[dict]:
-    """
-    Uses LLM to generate an email for a single contact.
-    Loads contact list from file.
-    Returns: {"contact": ..., "subject": ..., "body": ...}
-    """
     try:
         response, error = get_email_prompt(prompt, contacts)
         print(response)
