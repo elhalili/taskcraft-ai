@@ -85,6 +85,15 @@ Response:
   }}
 }}
 
+4. Instruction: list all issues in the last seven days
+Response:
+{{
+  "operation": "fetch_recent_issues",
+  "params": {{
+    "days": "7"
+  }}
+}}
+
 ONLY return the JSON object. Do NOT include any other explanation or text.
 
 Now process this instruction:
@@ -105,7 +114,7 @@ Now process this instruction:
         jira_data = json.loads(result)
         
         # Validate the operation type
-        valid_operations = ["list_project", "create_project", "create_issue"]
+        valid_operations = ["list_project", "create_project", "create_issue", "fetch_recent_issues"]
         if jira_data["operation"] not in valid_operations:
             return None, f"Invalid operation type: {jira_data['operation']}"
             

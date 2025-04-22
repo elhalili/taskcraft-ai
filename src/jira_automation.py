@@ -2,12 +2,18 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 import os
+from jira import JIRA
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 JIRA_API_TOKEN = os.getenv("JIRA_API_KEY")
 JIRA_EMAIL = os.getenv("JIRA_EMAIL")
 auth = HTTPBasicAuth(JIRA_EMAIL, JIRA_API_TOKEN)
 ACCOUNT_ID = os.getenv('JIRA_USER_ID')
 BASE_URL = os.getenv('JIRA_BASE_URL')
+JIRA_SERVER=os.getenv("JIRA_SERVER")
 
 headers = {
     "Accept": "application/json",
@@ -109,3 +115,36 @@ def list_project():
     return json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))
 
 
+# function to fetch last issues based on how much days
+
+def fetch_recent_issues(days):
+    jira = JIRA(server=JIRA_SERVER, basic_auth=(JIRA_EMAIL, JIRA_API_TOKEN))
+    
+    jql_query = f'created >= "-{days}d" ORDER BY created DESC'
+    
+    issues = jira.search_issues(jql_query)
+    
+    issue_list = []
+    for issue in issues:
+        issue_key = issue.key
+        summary = issue.fields.summary
+        created_date = issue.fields.created
+        status = issue.fields.status.name
+        assignee = issue.fields.assignee.displayName if issue.fields.assignee else "Unassigned"
+        
+        issue_data = {
+            "issue_key": issue_key,
+            "summary": summary,
+            "created_date": created_date,
+            "status": status,
+            "assignee": assignee
+        }
+        
+        issue_list.append(issue_data)
+    
+    response_dict = {
+        "total_issues": len(issue_list),
+        "issues": issue_list
+    }
+    
+    return json.dumps(json.loads(json.dumps(response_dict)), sort_keys=True, indent=4, separators=(",", ": "))

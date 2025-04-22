@@ -5,3 +5,7 @@ PyQt6_sip==13.10.0
 python-dotenv==1.1.0
 pywhispercpp==1.3.0
 sounddevice==0.5.1
+tavily-python 
+langchain-community
+langchain
+wikipedia
