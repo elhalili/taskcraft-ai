@@ -649,7 +649,7 @@ class VoiceRecorderApp(QMainWindow):
             self.start_recording()
 
     def show_animation(self):
-        movie = QMovie("../animation.gif")  
+        movie = QMovie("../assets/animation.gif")  
         self.animation_label.setMovie(movie)
         movie.start()
         self.animation_label.show()
