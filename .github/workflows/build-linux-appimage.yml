@@ -95,6 +95,6 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: TaskCraftAI ${{ steps.version.outputs.tag }}
-          files: ./*.AppImage
+          files: ./Task*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
