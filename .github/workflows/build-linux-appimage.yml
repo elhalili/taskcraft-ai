@@ -1,0 +1,95 @@
+name: Build and Release AppImage
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build TaskCraftAI AppImage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-venv wget
+
+      - name: Clean previous builds
+        run: |
+          rm -rf AppDir venv *.AppImage
+
+      - name: Create Python virtual environment
+        run: python3 -m venv venv
+
+      - name: Install Python dependencies
+        run: |
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare AppDir structure
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp -r src/* AppDir/usr/bin/
+          cp -r venv AppDir/usr/venv
+
+      - name: Create AppRun launcher
+        run: |
+          echo '#!/bin/bash' > AppDir/AppRun
+          echo 'HERE="$(dirname "$(readlink -f "$0")")"' >> AppDir/AppRun
+          echo 'export PATH="$HERE/usr/venv/bin:$PATH"' >> AppDir/AppRun
+          echo 'exec python3 "$HERE/usr/bin/main.py"' >> AppDir/AppRun
+          chmod +x AppDir/AppRun
+
+      - name: Add Desktop entry and icon
+        run: |
+          APP_NAME="TaskCraftAI"
+          echo "[Desktop Entry]" > AppDir/$APP_NAME.desktop
+          echo "Name=$APP_NAME" >> AppDir/$APP_NAME.desktop
+          echo "Exec=$APP_NAME" >> AppDir/$APP_NAME.desktop
+          echo "Icon=$APP_NAME" >> AppDir/$APP_NAME.desktop
+          echo "Type=Application" >> AppDir/$APP_NAME.desktop
+          echo "Categories=Utility;" >> AppDir/$APP_NAME.desktop
+          cp assets/logo.png AppDir/$APP_NAME.png
+
+      - name: Download linuxdeploy
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+
+      - name: Build AppImage
+        run: |
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --desktop-file AppDir/TaskCraftAI.desktop \
+            --icon-file AppDir/TaskCraftAI.png \
+            --output appimage
+
+      - name: Get version tag
+        id: version
+        run: |
+          echo "tag=v$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Upload AppImage as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: TaskCraftAI-AppImage
+          path: ./*.AppImage
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: TaskCraftAI ${{ steps.version.outputs.tag }}
+          files: ./*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
