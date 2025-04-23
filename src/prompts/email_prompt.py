@@ -1,10 +1,7 @@
 import json
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
 from typing import List, Dict, Tuple, Optional
-
-load_dotenv()
 
 NEBIUS_API_KEY = os.getenv("NEBIUS_API_KEY")
 NEBIUS_BASE_URL = os.getenv("NEBIUS_BASE_URL")
@@ -60,7 +57,6 @@ Now process this instruction:
 """
 
     try:
-        # Send the prompt to the OpenAI model for processing
         response = client.chat.completions.create(
             model=MODEL,
             messages=[

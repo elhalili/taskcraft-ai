@@ -138,3 +138,8 @@ cython_debug/
 
 
 recording/old_files
+
+contacts.json
+credentials.json
+./src/get_weather.py
+token.json

@@ -1,5 +1,18 @@
-NEBIUS_API_KEY="yourkey"
-NEBIUS_BASE_URL="https://api.studio.nebius.com/v1/"
-MODEL="meta-llama/Meta-Llama-3.1-70B-Instruct"
-GMAIL_APP_PASSWORD=""
-GMAIL_USER=""
+NEBIUS_API_KEY= # visit https://studio.nebius.com/
+NEBIUS_BASE_URL=https://api.studio.nebius.com/v1/
+MODEL=meta-llama/Meta-Llama-3.1-70B-Instruct 
+
+
+JIRA_API_KEY=""
+JIRA_BASE_URL=https://username.atlassian.net/rest/api/3 
+JIRA_EMAIL=
+USER_ID=
+
+JIRA_SERVER=https://username.atlassian.net/
+
+# for stmp 
+GMAIL_USER=
+GMAIL_APP_PASSWORD= # application password from gmail (need two factor auth)
+
+# for advanced real time searching (task) free tier
+TAVILY_API_KEY=

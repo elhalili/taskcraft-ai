@@ -281,6 +281,8 @@ class VoiceRecorderApp(QMainWindow):
         
         self.email_radio = QRadioButton("Email Mode")
         self.email_radio.toggled.connect(lambda: self.set_mode("email"))
+
+        
         
         mode_layout.addWidget(self.command_radio)
         mode_layout.addWidget(self.email_radio)
@@ -386,6 +388,40 @@ class VoiceRecorderApp(QMainWindow):
         # Add Jira group to main layout
         main_layout.addWidget(self.jira_group)
 
+
+
+        self.taskcrafters_radio = QRadioButton("Taskcrafters Mode")
+        self.taskcrafters_radio.toggled.connect(lambda: self.set_mode("taskcrafters"))
+
+        # Taskcrafters Group
+
+        self.taskcrafters_group = QGroupBox("taskcrafters mode")
+        taskcrafters_layout = QVBoxLayout(self.taskcrafters_group)
+        self.taskcrafters_label = QLabel("...")
+        self.taskcrafters_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.taskcrafters_label.setFont(QFont("Consolas", 10))
+        self.taskcrafters_label.setWordWrap(True)
+        taskcrafters_layout.addWidget(self.taskcrafters_label)
+        
+        taskcrafters_button_layout = QHBoxLayout()
+        #self.Taskcrafty_button = QPushButton("Taskcrafty")
+        #self.Taskcrafty_button.clicked.connect(self.send_taskcrafters_command)
+        #self.Taskcrafty_button.setEnabled(False)
+        #taskcrafters_button_layout.addWidget(self.Taskcrafty_button)
+        
+        self.cancel_taskcrafters_button = QPushButton("Clear/Cancel")
+        self.cancel_taskcrafters_button.clicked.connect(self.clear_command)
+        self.cancel_taskcrafters_button.setEnabled(False)
+        taskcrafters_button_layout.addWidget(self.cancel_taskcrafters_button)
+        
+        taskcrafters_layout.addLayout(taskcrafters_button_layout)
+        main_layout.addWidget(self.taskcrafters_group)
+        self.taskcrafters_group.hide()
+
+        # Add Jira radio button to mode selection
+        mode_layout.addWidget(self.taskcrafters_radio)
+    
+
     def load_contacts(self):
         """Load contacts from the configured JSON file"""
         contacts_path = self.app_settings["contacts"]["path"]
@@ -438,6 +474,10 @@ class VoiceRecorderApp(QMainWindow):
                 self.send_email_button.setEnabled(True)
                 self.cancel_email_button.setEnabled(True)
                 self.execute_jira_button.setEnabled(False)
+            elif self.current_mode == "taskcrafters":
+                #self.Taskcrafty_button.setEnabled(True)
+                self.cancel_taskcrafters_button.setEnabled(True)
+                self.execute_jira_button.setEnabled(False)
             else:  # jira mode
                 self.execute_jira_button.setEnabled(True)
                 self.cancel_jira_button.setEnabled(True)
@@ -484,14 +524,24 @@ class VoiceRecorderApp(QMainWindow):
             self.command_group.show()
             self.email_group.hide()
             self.jira_group.hide()
+            self.taskcrafters_group.hide()
         elif mode == "email":
             self.command_group.hide()
             self.email_group.show()
             self.jira_group.hide()
+            self.taskcrafters_group.hide()
+        elif mode == "taskcrafters":
+            self.command_group.hide()
+            self.email_group.hide()
+            self.jira_group.hide()
+            self.taskcrafters_group.show()
+
         else:  # jira mode
             self.command_group.hide()
             self.email_group.hide()
             self.jira_group.show()
+            self.taskcrafters_group.hide()
+
         self.clear_command()
 
     def update_jira_display(self, text):
@@ -514,6 +564,8 @@ class VoiceRecorderApp(QMainWindow):
 
     def update_email_display(self, text):
         self.email_label.setText(text if text else "...")
+    def update_taskcrafters_display(self, text):
+        self.taskcrafters_label.setText(text if text else "...")
 
     def _audio_callback(self, indata, frames, time, status):
         if status:
@@ -611,6 +663,12 @@ class VoiceRecorderApp(QMainWindow):
                     self.result_queue.put(("email_success", email_data))
                 else:
                     self.result_queue.put(("email_error", "Failed to generate email content."))
+            elif self.current_mode == "taskcrafters":
+                real_time_data = generate_response(instruction)
+                if real_time_data:
+                    self.result_queue.put(("success_answer", real_time_data))
+                else:
+                    self.result_queue.put(("no_answer", "Failed to Find answer!."))
             else:  # jira mode
                 jira_data, error = get_jira_prompt(instruction)
                 if error:
@@ -626,6 +684,8 @@ class VoiceRecorderApp(QMainWindow):
                 self.result_queue.put(("gpt_error", error_message))
             elif self.current_mode == "email":
                 self.result_queue.put(("email_error", error_message))
+            elif self.current_mode == "taskcrafters":
+                self.result_queue.put(("no_answer", error_message))
             else:
                 self.result_queue.put(("jira_error", error_message))
 
@@ -655,6 +715,17 @@ class VoiceRecorderApp(QMainWindow):
                 self.suggested_command = data
                 self.update_command_display(self.suggested_command)
                 self.set_ui_state('awaiting_confirmation')
+
+            elif message_type == "success_answer":
+                self.suggested_command = data
+                self.update_taskcrafters_display(self.suggested_command)
+                self.set_ui_state('awaiting_confirmation')
+
+            elif message_type == "no_answer":
+                self.update_command_display(f"Error generating command.")
+                self.update_status(f"Command generation failed", is_error=True)
+                QMessageBox.critical("Command Generation Error")
+                self.set_ui_state('idle')
 
             elif message_type == "gpt_error":
                 self.update_command_display(f"Error generating command.")
@@ -689,6 +760,9 @@ class VoiceRecorderApp(QMainWindow):
                     params = data["params"]
                     display_text += f"Project: {params['project_name']}\n"
                     display_text += f"Description: {params['description']}"
+                elif operation == "fetch_recent_issues":
+                    params = data["params"]
+                    display_text += f"Will list all available tasks before {params['days']}"
                 elif operation == "list_project":
                     display_text += "Will list all available projects"
                 
@@ -730,6 +804,11 @@ class VoiceRecorderApp(QMainWindow):
                     description=params["description"],
                     project_key=params["project_key"],
                     task_type=params["task_type"]
+                )
+            elif operation == "fetch_recent_issues":
+                params = self.suggested_command["params"]
+                result = fetch_recent_issues(
+                    days=params["days"]
                 )
             else:
                 raise ValueError(f"Unknown Jira operation: {operation}")
@@ -820,6 +899,40 @@ class VoiceRecorderApp(QMainWindow):
             self.update_status("Email cancelled by user.")
             self.set_ui_state('awaiting_confirmation')
 
+    def send_taskcrafters_command(self):
+        if not self.suggested_command:
+            self.update_status("No valid command found for Taskcrafters.", is_error=True)
+            self.set_ui_state('idle')
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Confirm Taskcrafters Command",
+            f"<b>You are about to execute the following Taskcrafters command:</b><br/><br/>"
+            f"{self.suggested_command}<br/><br/>"
+            "<b>Are you sure you want to proceed?</b>",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            try:
+                response = generate_response(self.suggested_command)
+                if response:
+                    self.update_taskcrafters_display(response)
+                    self.update_status("Taskcrafters response generated successfully!")
+                    QTimer.singleShot(2000, lambda: self.set_ui_state('idle'))
+                else:
+                    raise ValueError("Failed to generate a valid response.")
+            except Exception as e:
+                error_msg = f"Failed to execute Taskcrafters command: {str(e)}"
+                self.update_status(error_msg, is_error=True)
+                QMessageBox.critical(self, "Taskcrafters Error", error_msg)
+                self.set_ui_state('awaiting_confirmation')
+        else:
+            self.update_status("Taskcrafters command cancelled by user.")
+            self.set_ui_state('idle')
+
     def clear_command(self):
         self.suggested_command = ""
         self.update_command_display("")
@@ -831,11 +944,11 @@ class VoiceRecorderApp(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = VoiceRecorderApp()
-    # make sure env var are loaded
     from cli_commands import execute_cmd, get_cmd 
     from email_sender import generate_email_from_prompt, send_email
-    from jira_automation import create_issue, create_project, list_project
+    from jira_automation import create_issue, create_project, list_project, fetch_recent_issues
     from prompts import get_jira_prompt, generate_success_message
+    from taskcrafters_agent.real_time_response import generate_response
 
     main_window.show()
     sys.exit(app.exec())
