@@ -80,7 +80,7 @@ jobs:
           echo "tag=v$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Upload AppImage as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TaskCraftAI-AppImage
           path: ./*.AppImage
