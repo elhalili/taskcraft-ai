@@ -10,7 +10,7 @@ from pywhispercpp.model import Model
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTextEdit, QMessageBox, QGroupBox, QSizePolicy,
-    QRadioButton, QDialog, QLineEdit, QFormLayout, QTabWidget, QScrollArea, QFileDialog
+    QDialog, QLineEdit, QFormLayout, QTabWidget, QScrollArea, QFileDialog
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject, QSettings
 from PyQt6.QtGui import QFont, QPalette, QColor, QMovie
@@ -274,22 +274,32 @@ class VoiceRecorderApp(QMainWindow):
         settings_action = settings_menu.addAction("Open Settings")
         settings_action.triggered.connect(self.open_settings)
 
-        # Mode Selection
-        mode_group = QGroupBox("Mode Selection")
-        mode_layout = QHBoxLayout(mode_group)
-        
-        self.command_radio = QRadioButton("Command Mode")
-        self.command_radio.setChecked(True)
-        self.command_radio.toggled.connect(lambda: self.set_mode("command"))
-        
-        self.email_radio = QRadioButton("Email Mode")
-        self.email_radio.toggled.connect(lambda: self.set_mode("email"))
+        # Mode Selection - Using Tabs
+        self.mode_tabs = QTabWidget()
+        main_layout.addWidget(self.mode_tabs)
 
-        
-        
-        mode_layout.addWidget(self.command_radio)
-        mode_layout.addWidget(self.email_radio)
-        main_layout.addWidget(mode_group)
+        # Command Mode Tab
+        self.command_tab = QWidget()
+        self.command_layout = QVBoxLayout(self.command_tab)
+
+        # Email Mode Tab
+        self.email_tab = QWidget()
+        self.email_layout = QVBoxLayout(self.email_tab)
+
+        # Jira Mode Tab
+        self.jira_tab = QWidget()
+        self.jira_layout = QVBoxLayout(self.jira_tab)
+
+        # Taskcrafters Mode Tab
+        self.taskcrafters_tab = QWidget()
+        self.taskcrafters_layout = QVBoxLayout(self.taskcrafters_tab)
+
+        self.mode_tabs.addTab(self.command_tab, "Command Mode")
+        self.mode_tabs.addTab(self.email_tab, "Email Mode")
+        self.mode_tabs.addTab(self.jira_tab, "Jira Mode")
+        self.mode_tabs.addTab(self.taskcrafters_tab, "Taskcrafters Mode")
+
+        self.mode_tabs.currentChanged.connect(self.set_mode_from_tab)
 
         # Status Label
         self.status_label = QLabel("Status: Idle. Press Record.")
@@ -317,7 +327,7 @@ class VoiceRecorderApp(QMainWindow):
         transcription_layout.addWidget(self.transcription_text)
         main_layout.addWidget(transcription_group)
 
-        # Command Group
+        # Command Group (Moved to Command Tab)
         self.command_group = QGroupBox("Suggested Command")
         command_layout = QVBoxLayout(self.command_group)
         self.command_label = QLabel("...")
@@ -338,9 +348,9 @@ class VoiceRecorderApp(QMainWindow):
         button_layout.addWidget(self.cancel_button)
 
         command_layout.addLayout(button_layout)
-        main_layout.addWidget(self.command_group)
+        self.command_layout.addWidget(self.command_group)
 
-        # Email Group
+        # Email Group (Moved to Email Tab)
         self.email_group = QGroupBox("Email Content")
         email_layout = QVBoxLayout(self.email_group)
         self.email_label = QLabel("...")
@@ -361,14 +371,9 @@ class VoiceRecorderApp(QMainWindow):
         email_button_layout.addWidget(self.cancel_email_button)
         
         email_layout.addLayout(email_button_layout)
-        main_layout.addWidget(self.email_group)
-        self.email_group.hide()
+        self.email_layout.addWidget(self.email_group)
 
-        # Add Jira mode radio button
-        self.jira_radio = QRadioButton("Jira Mode")
-        self.jira_radio.toggled.connect(lambda: self.set_mode("jira"))
-        
-        # Add Jira GroupBox
+        # Jira Group (Moved to Jira Tab)
         self.jira_group = QGroupBox("Jira Operation")
         jira_layout = QVBoxLayout(self.jira_group)
         self.jira_label = QLabel("...")
@@ -389,22 +394,10 @@ class VoiceRecorderApp(QMainWindow):
         jira_button_layout.addWidget(self.cancel_jira_button)
         
         jira_layout.addLayout(jira_button_layout)
-        self.jira_group.hide()
-        
-        # Add Jira radio button to mode selection
-        mode_layout.addWidget(self.jira_radio)
-        
-        # Add Jira group to main layout
-        main_layout.addWidget(self.jira_group)
+        self.jira_layout.addWidget(self.jira_group)
 
-
-
-        self.taskcrafters_radio = QRadioButton("Taskcrafters Mode")
-        self.taskcrafters_radio.toggled.connect(lambda: self.set_mode("taskcrafters"))
-
-        # Taskcrafters Group
-
-        self.taskcrafters_group = QGroupBox("taskcrafters mode")
+        # Taskcrafters Group (Moved to Taskcrafters Tab)
+        self.taskcrafters_group = QGroupBox("Taskcrafters Mode")
         taskcrafters_layout = QVBoxLayout(self.taskcrafters_group)
         self.taskcrafters_label = QLabel("...")
         self.taskcrafters_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
@@ -413,10 +406,6 @@ class VoiceRecorderApp(QMainWindow):
         taskcrafters_layout.addWidget(self.taskcrafters_label)
         
         taskcrafters_button_layout = QHBoxLayout()
-        #self.Taskcrafty_button = QPushButton("Taskcrafty")
-        #self.Taskcrafty_button.clicked.connect(self.send_taskcrafters_command)
-        #self.Taskcrafty_button.setEnabled(False)
-        #taskcrafters_button_layout.addWidget(self.Taskcrafty_button)
         
         self.cancel_taskcrafters_button = QPushButton("Clear/Cancel")
         self.cancel_taskcrafters_button.clicked.connect(self.clear_command)
@@ -424,11 +413,7 @@ class VoiceRecorderApp(QMainWindow):
         taskcrafters_button_layout.addWidget(self.cancel_taskcrafters_button)
         
         taskcrafters_layout.addLayout(taskcrafters_button_layout)
-        main_layout.addWidget(self.taskcrafters_group)
-        self.taskcrafters_group.hide()
-
-        # Add Jira radio button to mode selection
-        mode_layout.addWidget(self.taskcrafters_radio)
+        self.taskcrafters_layout.addWidget(self.taskcrafters_group)
     
 
     def load_contacts(self):
@@ -453,6 +438,9 @@ class VoiceRecorderApp(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.send_email_button.setEnabled(False)
             self.cancel_email_button.setEnabled(False)
+            self.execute_jira_button.setEnabled(False)
+            self.cancel_jira_button.setEnabled(False)
+            self.cancel_taskcrafters_button.setEnabled(False)
             self.update_status("Idle. Press Record.")
         elif state == 'recording':
             self.record_button.setText("Stop Recording")
@@ -461,9 +449,14 @@ class VoiceRecorderApp(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.send_email_button.setEnabled(False)
             self.cancel_email_button.setEnabled(False)
+            self.execute_jira_button.setEnabled(False)
+            self.cancel_jira_button.setEnabled(False)
+            self.cancel_taskcrafters_button.setEnabled(False)
             self.update_transcription_display("Recording...")
             self.update_command_display("...")
             self.update_email_display("...")
+            self.update_jira_display("...")
+            self.update_taskcrafters_display("...")
             self.update_status("Recording audio...")
         elif state == 'processing':
             self.record_button.setText("Processing...")
@@ -472,24 +465,23 @@ class VoiceRecorderApp(QMainWindow):
             self.cancel_button.setEnabled(False)
             self.send_email_button.setEnabled(False)
             self.cancel_email_button.setEnabled(False)
+            self.execute_jira_button.setEnabled(False)
+            self.cancel_jira_button.setEnabled(False)
+            self.cancel_taskcrafters_button.setEnabled(False)
         elif state == 'awaiting_confirmation':
             self.record_button.setText("Record")
             self.record_button.setEnabled(True)
             if self.current_mode == "command":
                 self.execute_button.setEnabled(True)
                 self.cancel_button.setEnabled(True)
-                self.execute_jira_button.setEnabled(False)
             elif self.current_mode == "email":
                 self.send_email_button.setEnabled(True)
                 self.cancel_email_button.setEnabled(True)
-                self.execute_jira_button.setEnabled(False)
-            elif self.current_mode == "taskcrafters":
-                #self.Taskcrafty_button.setEnabled(True)
-                self.cancel_taskcrafters_button.setEnabled(True)
-                self.execute_jira_button.setEnabled(False)
-            else:  # jira mode
+            elif self.current_mode == "jira":
                 self.execute_jira_button.setEnabled(True)
                 self.cancel_jira_button.setEnabled(True)
+            elif self.current_mode == "taskcrafters":
+                self.cancel_taskcrafters_button.setEnabled(True)
             self.update_status("Review suggested command and Execute or Clear.")
 
     def check_audio_input(self):
@@ -526,31 +518,18 @@ class VoiceRecorderApp(QMainWindow):
             )
             self.update_status("Settings updated successfully")
 
+    def set_mode_from_tab(self, index):
+        if index == 0:
+            self.set_mode("command")
+        elif index == 1:
+            self.set_mode("email")
+        elif index == 2:
+            self.set_mode("jira")
+        elif index == 3:
+            self.set_mode("taskcrafters")
 
     def set_mode(self, mode):
         self.current_mode = mode
-        if mode == "command":
-            self.command_group.show()
-            self.email_group.hide()
-            self.jira_group.hide()
-            self.taskcrafters_group.hide()
-        elif mode == "email":
-            self.command_group.hide()
-            self.email_group.show()
-            self.jira_group.hide()
-            self.taskcrafters_group.hide()
-        elif mode == "taskcrafters":
-            self.command_group.hide()
-            self.email_group.hide()
-            self.jira_group.hide()
-            self.taskcrafters_group.show()
-
-        else:  # jira mode
-            self.command_group.hide()
-            self.email_group.hide()
-            self.jira_group.show()
-            self.taskcrafters_group.hide()
-
         self.clear_command()
 
     def update_jira_display(self, text):
