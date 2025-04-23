@@ -265,6 +265,7 @@ class VoiceRecorderApp(QMainWindow):
 
         self.contacts = {}
         self.load_contacts()
+        self.update_environment_variables()
 
     def init_ui(self):
         central_widget = QWidget()
@@ -950,7 +951,10 @@ if __name__ == "__main__":
     from email_sender import generate_email_from_prompt, send_email
     from jira_automation import create_issue, create_project, list_project, fetch_recent_issues
     from prompts import get_jira_prompt, generate_success_message
-    from taskcrafters_agent.real_time_response import generate_response
+    try:
+        from taskcrafters_agent.real_time_response import generate_response
+    except Exception as err:
+        print(err)
 
     main_window.show()
     sys.exit(app.exec())
