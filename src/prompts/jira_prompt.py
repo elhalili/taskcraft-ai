@@ -143,7 +143,7 @@ def generate_success_message(operation_result: Dict[str, Any]) -> Tuple[Optional
 You are a Jira assistant that generates friendly messages for completed operations.
 
 You will receive a JSON object describing a completed Jira operation and you must return
-a brief, friendly humain readable description that summarize the operation (if there are some lists please mention them, for example list of projects, or issues you will say them).
+a brief, friendly humain readable description that summarize the operation (if there are some lists please mention them, for example list of projects, or issues you will say them and description of each issue or project in a good format if exist).
 
 only the message.
 Now generate a message for this completed operation:

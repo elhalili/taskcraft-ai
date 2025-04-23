@@ -57,7 +57,6 @@ Now process this instruction:
 """
 
     try:
-        # Send the prompt to the OpenAI model for processing
         response = client.chat.completions.create(
             model=MODEL,
             messages=[

@@ -12,10 +12,6 @@ CREDENTIALS_FILE = '../credentials.json'
 TOKEN_FILE = '../token.json'
 
 def get_oauth_credentials():
-    """
-    Retrieves OAuth2 credentials for accessing Gmail.
-    If no valid credentials are found, initiates the OAuth2 flow.
-    """
     creds = None
 
     if os.path.exists(TOKEN_FILE):

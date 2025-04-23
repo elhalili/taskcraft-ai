@@ -48,16 +48,17 @@ class SettingsDialog(QDialog):
         scroll_content = QWidget()
         scroll_layout = QFormLayout(scroll_content)
         
-        self.nebius_group = QGroupBox("Nebius API Settings")
+        self.nebius_group = QGroupBox("LLM API Settings")
         nebius_layout = QFormLayout(self.nebius_group)
         
         self.nebius_api_key_input = QLineEdit()
         self.nebius_base_url_input = QLineEdit()
+        self.nebius_api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.nebius_model_input = QLineEdit()
         
-        nebius_layout.addRow("Nebius API Key:", self.nebius_api_key_input)
-        nebius_layout.addRow("Nebius Base URL:", self.nebius_base_url_input)
-        nebius_layout.addRow("Nebius Model:", self.nebius_model_input)
+        nebius_layout.addRow("API Key:", self.nebius_api_key_input)
+        nebius_layout.addRow("Base URL:", self.nebius_base_url_input)
+        nebius_layout.addRow("Model:", self.nebius_model_input)
 
         
         scroll_layout.addRow(self.nebius_group)
@@ -105,7 +106,9 @@ class SettingsDialog(QDialog):
         
         self.jira_email_input = QLineEdit()
         self.jira_token_input = QLineEdit()
+        self.jira_token_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.jira_userid_input = QLineEdit()
+        self.jira_userid_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.jira_base_url_input = QLineEdit()
 
         
@@ -886,10 +889,9 @@ class VoiceRecorderApp(QMainWindow):
                     self.suggested_command['contact'],
                     self.suggested_command['subject'],
                     self.suggested_command['body'],
-                    sender_email=email_settings["sender"],
-                    sender_password=email_settings["password"]
                 )
-                self.update_status("Email sent successfully!")
+                self.update_status("✅ Email sent successfully!")
+                self.update_email_display("✅ Email sent successfully!")
                 QTimer.singleShot(2000, lambda: self.set_ui_state('idle'))
             except Exception as e:
                 self.update_status(f"Failed to send email: {str(e)}", is_error=True)

@@ -8,6 +8,13 @@ from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_community.tools import YouTubeSearchTool
+import re
+import datetime
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+
 
 load_dotenv()
 
@@ -18,6 +25,65 @@ llm = ChatOpenAI(
     temperature=0.2,
     streaming=True 
 )
+
+SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+
+def create_google_calendar_event(title, description, start_time_str, end_time_str, timezone='UTC'):
+    creds = None
+
+    if os.path.exists('../token.json'):
+        creds = Credentials.from_authorized_user_file('../token.json', SCOPES)
+
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file('../credentials.json', SCOPES)
+            creds = flow.run_local_server(port=8080)
+        with open('../token.json', 'w') as token_file:
+            token_file.write(creds.to_json())
+
+    service = build('calendar', 'v3', credentials=creds)
+
+    event = {
+        'summary': title,
+        'description': description,
+        'start': {
+            'dateTime': start_time_str,
+            'timeZone': timezone,
+        },
+        'end': {
+            'dateTime': end_time_str,
+            'timeZone': timezone,
+        },
+    }
+
+    event_result = service.events().insert(calendarId='primary', body=event).execute()
+    return f"✅ Event created: {event_result.get('htmlLink')}"
+
+
+def parse_calendar_input(input_string):
+    pattern = r"Title: (.*?), Description: (.*?), Start: (.*?), End: (.*?), Timezone: (.*)"
+    match = re.match(pattern, input_string)
+    if not match:
+        raise ValueError("Input string is not in the correct format.")
+    
+    title = match.group(1).strip()
+    description = match.group(2).strip()
+    start_time_str = match.group(3).strip()
+    end_time_str = match.group(4).strip()
+    timezone = match.group(5).strip()
+    
+    return title, description, start_time_str, end_time_str, timezone
+
+def calendar_event_tool_func(input_string):
+    try:
+        title, description, start_time_str, end_time_str, timezone = parse_calendar_input(input_string)
+        return create_google_calendar_event(title, description, start_time_str, end_time_str, timezone)
+    except Exception as e:
+        return f"Error processing calendar event: {e}"
+
+
 
 def get_location_from_ip(ip_address):
     try:
@@ -56,6 +122,14 @@ search_tool = TavilySearchResults()
 wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 duckduckgo = DuckDuckGoSearchRun()
 youtube_search = YouTubeSearchTool()
+calendar_event_tool = Tool(
+    name="Google Calendar Event Creator",
+    func=calendar_event_tool_func,
+    description=(
+        "Useful for creating calendar events. "
+        "Input format must be: 'Title: ..., Description: ..., Start: YYYY-MM-DDTHH:MM:SS, End: YYYY-MM-DDTHH:MM:SS, Timezone: ...'."
+    )
+)
 
 tools = [
     Tool(
@@ -78,7 +152,8 @@ tools = [
         func=youtube_search.run,
         description="Useful for finding videos related to tutorials, reviews, or entertainment."
     ),
-    ip_location_tool 
+    ip_location_tool,
+    calendar_event_tool
 ]
 
 agent = initialize_agent(
@@ -92,8 +167,17 @@ agent = initialize_agent(
 def refine_instruction(instruction):
     location = get_location_from_ip(get_user_ip())
     city = location.get("city", "casablanca")
-    
-    if "weather" in instruction.lower():
+    if "calendar" in instruction.lower() or "event" in instruction.lower() or "meeting" in instruction.lower():
+        refinement_prompt = (
+            f"You are a helpful assistant that transforms casual user input into a structured format for creating Google Calendar events. "
+            f"Convert the following instruction into this exact format:\n\n"
+            f"'Title: ..., Description: ..., Start: YYYY-MM-DDTHH:MM:SS, End: YYYY-MM-DDTHH:MM:SS, Timezone: {city or 'UTC'}'\n\n"
+            f"Input: {instruction}\n"
+            f"Output:"
+        )
+        refined_instruction = llm.invoke(refinement_prompt).content 
+        return refined_instruction.strip()
+    elif "weather" in instruction.lower():
         refinement_prompt = f"Refine the following instruction into a concise and effective query, including the location ({city}): {instruction}"
     else:
         refinement_prompt = f"Refine the following instruction into a concise and effective query: {instruction}"
